@@ -1,0 +1,17 @@
+flask
+flask-cors
+ctransformers
+sentencepiece
+pdfplumber
+python-docx
+pypdf
+docx2txt
+imapclient
+requests
+python-dotenv
+datasets
+pandas
+numpy
+scikit-learn
+huggingface-hub
+llama-cpp-python
