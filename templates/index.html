@@ -1,202 +1,310 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <title>AI Chatbot</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LLama Chatbot — Modern UI</title>
 
-    <!-- FONT + ICONS -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css"/>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: "Inter", sans-serif;
-            background: #1e1f22;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            color: #fff;
-        }
+<style>
+  :root {
+    --bg:#0f1720; --card:#111215; --accent:#10a37f; --muted:#9aa0a6;
+    --bubble-user:#0a84ff; --bubble-bot:#1f2230;
+    --sidebar:#0b0c0f; --text:#e6eef6;
+  }
+  body {
+    margin:0; font-family:Inter,system-ui,Arial;
+    background:var(--bg); color:var(--text);
+    display:flex; height:100vh; overflow:hidden;
+  }
+  /* Sidebar */
+  #sidebar {
+    width:280px; background:var(--sidebar);
+    padding:18px; display:flex; flex-direction:column;
+    box-shadow:2px 0 10px rgba(0,0,0,0.4);
+    gap:14px;
+  }
+  #logo { font-size:20px; font-weight:700; margin-bottom:10px; }
+  .conv-item {
+    padding:10px; border-radius:10px; cursor:pointer;
+    display:flex; gap:10px; align-items:center;
+  }
+  .conv-item:hover { background:rgba(255,255,255,0.04); }
+  .conv-title { font-size:14px; }
+  #new-btn {
+    background:transparent; border:1px dashed rgba(255,255,255,0.08);
+    padding:10px; border-radius:10px; cursor:pointer; color:var(--muted);
+  }
+  #theme-controls { margin-top:auto; display:flex; gap:8px; }
+  .theme-btn {
+    padding:6px 10px; border-radius:8px;
+    background:transparent; color:var(--muted);
+    border:1px solid rgba(255,255,255,0.08);
+    cursor:pointer;
+  }
+  /* Main */
+  #main { flex:1; display:flex; flex-direction:column; }
+  #header {
+    padding:14px 20px; border-bottom:1px solid rgba(255,255,255,0.05);
+    display:flex; align-items:center; gap:12px;
+  }
+  #chat-area {
+    flex:1; overflow-y:auto; padding:20px;
+    display:flex; flex-direction:column; gap:14px;
+    background:linear-gradient(180deg,#0b0d11 0%, #0f1113 100%);
+  }
+  .row { display:flex; gap:10px; align-items:flex-end; }
+  /* Bubble */
+  .bubble {
+    padding:12px 14px; max-width:75%; line-height:1.55;
+    font-size:15px; border-radius:14px;
+  }
+  .user { margin-left:auto; background:var(--bubble-user); color:white; }
+  .bot { background:var(--bubble-bot); color:var(--text); }
+  /* Avatars */
+  .avatar {
+    width:36px; height:36px; border-radius:8px;
+    background:#1f2937; display:flex; justify-content:center; align-items:center;
+    font-weight:600;
+  }
+  .avatar.user { background:#0047b3; }
+  /* input */
+  #input-box {
+    padding:14px; background:var(--card);
+    border-top:1px solid rgba(255,255,255,0.05);
+    display:flex; gap:12px;
+  }
+  #prompt {
+    flex:1; padding:12px; background:#0b0d11;
+    border:none; border-radius:10px; color:white;
+  }
+  #send {
+    background:var(--accent); border:none;
+    padding:12px 16px; border-radius:10px; color:white;
+    cursor:pointer; font-weight:600;
+  }
+  #typing { display:none; padding:8px 16px; color:var(--muted); }
+  /* markdown + code */
+  pre { background:#0b0d11; padding:12px; border-radius:10px; }
+  .bubble code { background:rgba(0,0,0,0.3); padding:4px; border-radius:4px; }
 
-        /** CHAT CONTAINER **/
-        #chat-wrapper {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            max-width: 900px;
-            height: 100vh;
-            border-left: 1px solid #2a2b2e;
-            border-right: 1px solid #2a2b2e;
-            background: #232427;
-        }
+  /* THEMES */
+  .theme-light{
+    --bg:#f8fafc; --card:#fff; --sidebar:#fff; --text:#1f2937;
+    --bubble-user:#2563eb; --bubble-bot:#e5e7eb;
+  }
+  .theme-neum {
+    --bg:#e9eef6; --sidebar:#f0f3fa; --card:#fff;
+    --text:#111; --bubble-user:#10707a; --bubble-bot:#fff;
+  }
+  .theme-blue{
+    --bg:#0b1220; --sidebar:#071226; --card:#0a1629;
+    --text:#d4e1f7; --bubble-user:#2ea6ff; --bubble-bot:#071226;
+  }
 
-        /** HEADER **/
-        #header {
-            padding: 15px 20px;
-            background: #2a2b2e;
-            font-size: 18px;
-            font-weight: 600;
-            border-bottom: 1px solid #333;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #header .dot {
-            width: 10px;
-            height: 10px;
-            background: #31d158;
-            border-radius: 50%;
-        }
-
-        /** CHAT AREA **/
-        #chat {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            scroll-behavior: smooth;
-        }
-
-        .bubble {
-            max-width: 70%;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-            line-height: 1.5;
-            border-radius: 15px;
-            position: relative;
-            animation: fadeIn 0.2s ease;
-        }
-
-        .user {
-            background: #007aff;
-            color: #fff;
-            margin-left: auto;
-            border-bottom-right-radius: 2px;
-        }
-
-        .bot {
-            background: #2f3136;
-            color: #e2e2e2;
-            margin-right: auto;
-            border-bottom-left-radius: 2px;
-        }
-
-        /** INPUT BAR **/
-        #input-area {
-            background: #2a2b2e;
-            padding: 12px;
-            display: flex;
-            gap: 10px;
-            border-top: 1px solid #333;
-        }
-
-        #input {
-            flex: 1;
-            border: none;
-            background: #1e1f22;
-            padding: 12px 15px;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 15px;
-        }
-
-        #input:focus {
-            outline: none;
-        }
-
-        button {
-            border: none;
-            background: #10a37f;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        button:hover {
-            background: #0d8f6c;
-        }
-
-        /** TYPING INDICATOR **/
-        #typing {
-            padding: 5px 20px;
-            font-size: 14px;
-            color: #bbb;
-            display: none;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-    </style>
+  /* mobile */
+  @media(max-width:900px){ #sidebar { display:none; } }
+</style>
 </head>
-<body>
 
-<div id="chat-wrapper">
+<body id="page">
+{% raw %}
+<div id="sidebar">
+  <div id="logo">LLamaChat</div>
+  <div id="convs"></div>
+  <button id="new-btn">+ Nuova chat</button>
 
-    <div id="header">
-        <div class="dot"></div> AI Chatbot
-    </div>
-
-    <div id="chat"></div>
-    <div id="typing">🤖 L'assistente sta scrivendo...</div>
-
-    <div id="input-area">
-        <input id="input" type="text" placeholder="Scrivi un messaggio..." autocomplete="off">
-        <button onclick="send()"><i class="bi bi-send-fill"></i></button>
-    </div>
-
+  <div id="theme-controls">
+    <button class="theme-btn" data-theme="dark">Dark</button>
+    <button class="theme-btn" data-theme="light">Light</button>
+    <button class="theme-btn" data-theme="blue">Blue</button>
+    <button class="theme-btn" data-theme="neum">Neum</button>
+  </div>
 </div>
 
+<div id="main">
+  <div id="header">
+    <div class="avatar bot">AI</div>
+    <h2 id="chat-title">Chat</h2>
+  </div>
+
+  <div id="chat-area"></div>
+
+  <div id="typing">🤖 L'assistente sta scrivendo...</div>
+
+  <div id="input-box">
+    <input id="prompt" placeholder="Scrivi un messaggio..." autocomplete="off"/>
+    <button id="send">Invia</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
 <script>
-async function send() {
-    const input = document.getElementById("input");
-    const chat = document.getElementById("chat");
-    const typing = document.getElementById("typing");
-    const text = input.value.trim();
-    if (!text) return;
+/* ------------------------------
+   STATE & LOAD CONVERSATIONS
+------------------------------ */
+let currentConv = null;
+let partial = "";
 
-    addBubble(text, "user");
-    input.value = "";
+/* API helpers */
+async function loadConvs(){
+  const r = await fetch("/conversations");
+  const list = await r.json();
+  const box = document.getElementById("convs");
+  box.innerHTML = "";
 
-    typing.style.display = "block";
+  list.forEach(c=>{
+    let el = document.createElement("div");
+    el.className="conv-item";
+    el.dataset.id = c.id;
+    el.innerHTML = `
+      <div class="avatar">C</div>
+      <div class="conv-title">${c.title}</div>
+    `;
+    el.onclick = ()=> loadConversation(c.id);
+    box.appendChild(el);
+  });
+}
 
+async function newConv(){
+  const r = await fetch("/conversation",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:"Nuova chat"})});
+  const j = await r.json();
+  await loadConvs();
+  loadConversation(j.id);
+}
+
+async function loadConversation(id){
+  const r = await fetch("/conversation/"+id);
+  const conv = await r.json();
+  currentConv = id;
+  document.getElementById("chat-title").innerText = conv.title;
+  const area = document.getElementById("chat-area");
+  area.innerHTML = "";
+  for(const m of conv.messages){
+    addMessage(m.role, m.text);
+  }
+  area.scrollTop = area.scrollHeight;
+}
+
+/* ------------------------------
+   MESSAGE RENDERING
+------------------------------ */
+function addMessage(role,text){
+  const area = document.getElementById("chat-area");
+
+  const row = document.createElement("div");
+  row.className="row";
+
+  const avatar = document.createElement("div");
+  avatar.className="avatar " + (role==="user"?"user":"bot");
+  avatar.textContent = role==="user"?"TU":"AI";
+
+  const bubble = document.createElement("div");
+  bubble.className="bubble " + (role==="user"?"user":"bot");
+  bubble.innerHTML = marked.parse(text);
+
+  if(role==="user"){
+    row.appendChild(bubble);
+    row.appendChild(avatar);
+  } else {
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+  }
+
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+  area.querySelectorAll("pre code").forEach(b => hljs.highlightElement(b));
+  return bubble;
+}
+
+/* ------------------------------
+   STREAMING (SSE)
+------------------------------ */
+async function startStreamMessage(conv_id, message){
+  // save user message
+  await fetch("/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conv_id,message})});
+  addMessage("user", message);
+
+  document.getElementById("typing").style.display="block";
+
+  const r = await fetch("/start_stream",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conv_id})});
+  const meta = await r.json();
+  const streamId = meta.conv_id;
+
+  let botBubble = addMessage("assistant", "");
+  partial = "";
+
+  const es = new EventSource("/events/" + streamId);
+  es.onmessage = ev => {
     try {
-        const res = await fetch("/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text })
-        });
+      const d = JSON.parse(ev.data);
+      if(d.type==="token"){
+        partial += d.text;
+        botBubble.innerHTML = marked.parse(partial);
+        hljs.highlightAll();
+      }
+      if(d.type==="done"){
+        document.getElementById("typing").style.display="none";
+        es.close();
+        setTimeout(()=>loadConversation(streamId),300);
+      }
+      if(d.type==="error"){
+        botBubble.innerHTML = "<i>Errore generazione</i>";
+        document.getElementById("typing").style.display="none";
+        es.close();
+      }
+    } catch(e){ console.error(e); }
+  };
 
-        const data = await res.json();
-        typing.style.display = "none";
-        addBubble(data.response, "bot");
-
-    } catch (err) {
-        typing.style.display = "none";
-        addBubble("Errore di connessione al server.", "bot");
-    }
+  es.onerror = () => {
+    es.close();
+    document.getElementById("typing").style.display="none";
+  };
 }
 
-function addBubble(text, type) {
-    const bubble = document.createElement("div");
-    bubble.className = "bubble " + type;
-    bubble.textContent = text;
+/* ------------------------------
+   UI EVENTS
+------------------------------ */
+document.getElementById("send").onclick = async ()=>{
+  const input = document.getElementById("prompt");
+  const text = input.value.trim();
+  if(!text) return;
+  if(!currentConv){
+    const r = await fetch("/conversation",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:"Chat"})});
+    const j = await r.json();
+    currentConv = j.id;
+    await loadConvs();
+  }
+  input.value="";
+  startStreamMessage(currentConv,text);
+};
 
-    const chat = document.getElementById("chat");
-    chat.appendChild(bubble);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-document.getElementById("input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") send();
+document.getElementById("prompt").addEventListener("keydown",e=>{
+  if(e.key==="Enter") document.getElementById("send").click();
 });
-</script>
 
+document.getElementById("new-btn").onclick = newConv;
+
+/* THEMES */
+document.querySelectorAll(".theme-btn").forEach(b=>{
+  b.onclick = ()=>{
+    const t = b.dataset.theme;
+    const page = document.getElementById("page");
+    if(t==="light") page.className="theme-light";
+    else if(t==="blue") page.className="theme-blue";
+    else if(t==="neum") page.className="theme-neum";
+    else page.className="";
+  };
+});
+
+/* INIT */
+loadConvs();
+</script>
+{% endraw %}
 </body>
 </html>
