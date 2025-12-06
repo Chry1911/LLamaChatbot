@@ -1,6 +1,6 @@
 flask
 flask-cors
-ctransformers
+llama-cpp-python>=0.2.90
 sentencepiece
 pdfplumber
 python-docx
@@ -14,4 +14,3 @@ pandas
 numpy
 scikit-learn
 huggingface-hub
-llama-cpp-python
