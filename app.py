@@ -7,6 +7,8 @@ from queue import Queue, Empty
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from llama_cpp import Llama
+from pdf_handler import pdf_bp 
+from email_reader import email_bp  # Nuovo import
 
 # ---------------------------------------------------
 # CONFIGURAZIONE
@@ -37,8 +39,17 @@ llm = Llama(
 )
 print("✅ Modello caricato!")
 
+from pdf_handler import set_llm_model
+set_llm_model(llm)
+print("✅ Modello condiviso con pdf_handler!")
+
 app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)
+
+# Registra il blueprint PDF
+app.register_blueprint(pdf_bp, url_prefix='/api')
+# Registra il blueprint Email
+app.register_blueprint(email_bp, url_prefix='/api')  # Nuovo
 
 # ---------------------------------------------------
 # FUNZIONI DI STORAGE
@@ -263,4 +274,10 @@ def events(conv_id):
 if __name__ == "__main__":
     if not os.path.exists(MODELS_DIR):
         os.makedirs(MODELS_DIR)
-    app.run(debug=False, port=5000, host="0.0.0.0")
+    
+    # Fix per Windows 11 - disabilita output colorato
+    import sys
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    
+    # Avvia senza debug per evitare problemi console
+    app.run(debug=False, port=5000, host="127.0.0.1", use_reloader=False)

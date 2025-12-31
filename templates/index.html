@@ -1,310 +1,652 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>LLama Chatbot — Modern UI</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css"/>
-
-<style>
-  :root {
-    --bg:#0f1720; --card:#111215; --accent:#10a37f; --muted:#9aa0a6;
-    --bubble-user:#0a84ff; --bubble-bot:#1f2230;
-    --sidebar:#0b0c0f; --text:#e6eef6;
-  }
-  body {
-    margin:0; font-family:Inter,system-ui,Arial;
-    background:var(--bg); color:var(--text);
-    display:flex; height:100vh; overflow:hidden;
-  }
-  /* Sidebar */
-  #sidebar {
-    width:280px; background:var(--sidebar);
-    padding:18px; display:flex; flex-direction:column;
-    box-shadow:2px 0 10px rgba(0,0,0,0.4);
-    gap:14px;
-  }
-  #logo { font-size:20px; font-weight:700; margin-bottom:10px; }
-  .conv-item {
-    padding:10px; border-radius:10px; cursor:pointer;
-    display:flex; gap:10px; align-items:center;
-  }
-  .conv-item:hover { background:rgba(255,255,255,0.04); }
-  .conv-title { font-size:14px; }
-  #new-btn {
-    background:transparent; border:1px dashed rgba(255,255,255,0.08);
-    padding:10px; border-radius:10px; cursor:pointer; color:var(--muted);
-  }
-  #theme-controls { margin-top:auto; display:flex; gap:8px; }
-  .theme-btn {
-    padding:6px 10px; border-radius:8px;
-    background:transparent; color:var(--muted);
-    border:1px solid rgba(255,255,255,0.08);
-    cursor:pointer;
-  }
-  /* Main */
-  #main { flex:1; display:flex; flex-direction:column; }
-  #header {
-    padding:14px 20px; border-bottom:1px solid rgba(255,255,255,0.05);
-    display:flex; align-items:center; gap:12px;
-  }
-  #chat-area {
-    flex:1; overflow-y:auto; padding:20px;
-    display:flex; flex-direction:column; gap:14px;
-    background:linear-gradient(180deg,#0b0d11 0%, #0f1113 100%);
-  }
-  .row { display:flex; gap:10px; align-items:flex-end; }
-  /* Bubble */
-  .bubble {
-    padding:12px 14px; max-width:75%; line-height:1.55;
-    font-size:15px; border-radius:14px;
-  }
-  .user { margin-left:auto; background:var(--bubble-user); color:white; }
-  .bot { background:var(--bubble-bot); color:var(--text); }
-  /* Avatars */
-  .avatar {
-    width:36px; height:36px; border-radius:8px;
-    background:#1f2937; display:flex; justify-content:center; align-items:center;
-    font-weight:600;
-  }
-  .avatar.user { background:#0047b3; }
-  /* input */
-  #input-box {
-    padding:14px; background:var(--card);
-    border-top:1px solid rgba(255,255,255,0.05);
-    display:flex; gap:12px;
-  }
-  #prompt {
-    flex:1; padding:12px; background:#0b0d11;
-    border:none; border-radius:10px; color:white;
-  }
-  #send {
-    background:var(--accent); border:none;
-    padding:12px 16px; border-radius:10px; color:white;
-    cursor:pointer; font-weight:600;
-  }
-  #typing { display:none; padding:8px 16px; color:var(--muted); }
-  /* markdown + code */
-  pre { background:#0b0d11; padding:12px; border-radius:10px; }
-  .bubble code { background:rgba(0,0,0,0.3); padding:4px; border-radius:4px; }
-
-  /* THEMES */
-  .theme-light{
-    --bg:#f8fafc; --card:#fff; --sidebar:#fff; --text:#1f2937;
-    --bubble-user:#2563eb; --bubble-bot:#e5e7eb;
-  }
-  .theme-neum {
-    --bg:#e9eef6; --sidebar:#f0f3fa; --card:#fff;
-    --text:#111; --bubble-user:#10707a; --bubble-bot:#fff;
-  }
-  .theme-blue{
-    --bg:#0b1220; --sidebar:#071226; --card:#0a1629;
-    --text:#d4e1f7; --bubble-user:#2ea6ff; --bubble-bot:#071226;
-  }
-
-  /* mobile */
-  @media(max-width:900px){ #sidebar { display:none; } }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  
+  <style>
+    [x-cloak] { display: none !important; }
+  </style>
 </head>
 
-<body id="page">
-{% raw %}
-<div id="sidebar">
-  <div id="logo">LLamaChat</div>
-  <div id="convs"></div>
-  <button id="new-btn">+ Nuova chat</button>
+<body class="bg-gray-100 p-8">
 
-  <div id="theme-controls">
-    <button class="theme-btn" data-theme="dark">Dark</button>
-    <button class="theme-btn" data-theme="light">Light</button>
-    <button class="theme-btn" data-theme="blue">Blue</button>
-    <button class="theme-btn" data-theme="neum">Neum</button>
+<!-- Demo Page Content -->
+<div class="max-w-4xl mx-auto">
+  <h1 class="text-4xl font-bold text-gray-900 mb-4">Benvenuto su LLamaChat</h1>
+  <p class="text-gray-600 mb-8">Clicca sull'icona in basso a destra per iniziare a chattare con l'AI! 🦙</p>
+  
+  <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Funzionalità</h2>
+    <ul class="space-y-2 text-gray-700">
+      <li>✅ Chat con AI in tempo reale</li>
+      <li>📄 Carica e analizza PDF</li>
+      <li>📧 Leggi e riassumi email</li>
+      <li>🎨 Temi personalizzabili</li>
+      <li>💬 Conversazioni multiple</li>
+    </ul>
   </div>
 </div>
 
-<div id="main">
-  <div id="header">
-    <div class="avatar bot">AI</div>
-    <h2 id="chat-title">Chat</h2>
+<!-- CHATBOT WIDGET -->
+<div 
+  x-data="chatWidget()"
+  x-init="init()"
+  x-cloak
+>
+  
+  <!-- Floating Button -->
+  <button 
+    x-show="!open"
+    @click="open = true"
+    class="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full shadow-2xl flex items-center justify-center text-white text-2xl hover:scale-110 transition-transform z-50"
+  >
+    💬
+  </button>
+
+  <!-- Chat Window -->
+  <div 
+    x-show="open"
+    x-transition
+    class="fixed bottom-6 right-6 w-[380px] rounded-2xl shadow-2xl bg-white overflow-hidden z-50"
+  >
+
+    <!-- HEADER -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center font-semibold">
+          AI
+        </div>
+        <div>
+          <div class="font-semibold">LLamaChat</div>
+          <div class="text-xs text-green-300 flex items-center gap-1">
+            <span class="w-2 h-2 bg-green-300 rounded-full"></span>
+            Online
+          </div>
+        </div>
+      </div>
+      
+      <!-- User Avatar with Menu -->
+      <div class="relative" x-data="{ menuOpen: false }">
+        <button @click.stop="menuOpen = !menuOpen" class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center font-semibold hover:bg-white/30 transition-colors">
+          <span x-text="user.initials"></span>
+        </button>
+
+        <!-- User Dropdown -->
+        <div x-show="menuOpen" @click.away="menuOpen = false" x-cloak
+          class="absolute right-0 top-12 w-56 bg-white rounded-xl shadow-2xl z-50 overflow-hidden">
+          <div class="p-3 bg-gray-50 border-b">
+            <div class="font-semibold text-gray-900 text-sm" x-text="user.name"></div>
+            <div class="text-xs text-gray-500" x-text="user.email"></div>
+          </div>
+          <div class="p-1">
+            <button @click="menuOpen = false" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-lg text-sm flex items-center gap-2">
+              <span>👤</span> Profilo
+            </button>
+            <button @click="showThemeMenu = !showThemeMenu; menuOpen = false" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-lg text-sm flex items-center gap-2">
+              <span>🎨</span> Temi
+            </button>
+          </div>
+          <div class="border-t p-1">
+            <button class="w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 rounded-lg text-sm flex items-center gap-2">
+              <span>🚪</span> Esci
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="bg-gray-50 border-b px-4 py-2 flex gap-2 items-center">
+      <button @click="openConversations()" class="flex-1 px-3 py-1.5 bg-white hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+        💬 Chat
+      </button>
+      <button @click="openPdfModal()" class="px-3 py-1.5 bg-white hover:bg-gray-100 rounded-lg text-sm transition-colors" title="Carica PDF">
+        📄
+      </button>
+      <button @click="openEmailModal()" class="px-3 py-1.5 bg-white hover:bg-gray-100 rounded-lg text-sm transition-colors" title="Leggi Email">
+        📧
+      </button>
+      <button @click="showThemeMenu = !showThemeMenu" class="px-3 py-1.5 bg-white hover:bg-gray-100 rounded-lg text-sm transition-colors" title="Temi">
+        🎨
+      </button>
+      <button @click="open = false" class="px-3 py-1.5 bg-white hover:bg-gray-100 rounded-lg text-sm transition-colors">
+        ✕
+      </button>
+    </div>
+
+    <!-- Theme Selector -->
+    <div x-show="showThemeMenu" x-cloak class="bg-blue-50 border-b px-4 py-2">
+      <div class="text-xs font-semibold text-gray-600 mb-2">Seleziona Tema</div>
+      <div class="flex gap-2">
+        <button @click="theme='dark'; showThemeMenu=false" :class="theme==='dark' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" class="flex-1 px-2 py-1 rounded text-xs font-medium">Dark</button>
+        <button @click="theme='light'; showThemeMenu=false" :class="theme==='light' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" class="flex-1 px-2 py-1 rounded text-xs font-medium">Light</button>
+        <button @click="theme='blue'; showThemeMenu=false" :class="theme==='blue' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" class="flex-1 px-2 py-1 rounded text-xs font-medium">Blue</button>
+      </div>
+    </div>
+
+    <!-- CONVERSATIONS LIST -->
+    <div x-show="view === 'conversations'" x-cloak class="h-[420px] overflow-y-auto p-3 space-y-2 bg-gray-50">
+      <button @click="newConversation()" class="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+        ➕ Nuova Conversazione
+      </button>
+      
+      <template x-for="conv in conversations" :key="conv.id">
+        <div @click="loadConversation(conv.id)" class="p-3 bg-white hover:bg-gray-100 rounded-lg cursor-pointer transition-colors border border-gray-200">
+          <div class="font-medium text-sm text-gray-900" x-text="conv.title"></div>
+        </div>
+      </template>
+    </div>
+
+    <!-- MESSAGES -->
+    <div 
+      x-show="view === 'chat'"
+      x-ref="chatArea"
+      class="h-[420px] overflow-y-auto p-4 space-y-3"
+      :class="theme === 'light' ? 'bg-gray-50' : theme === 'blue' ? 'bg-gradient-to-b from-blue-900 to-blue-800' : 'bg-gradient-to-b from-gray-900 to-gray-800'"
+    >
+      <template x-for="(msg, idx) in messages" :key="idx">
+        <div class="flex gap-2" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+          
+          <!-- Bot Avatar -->
+          <div x-show="msg.role !== 'user'" class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs flex-shrink-0">
+            AI
+          </div>
+
+          <!-- Message Bubble -->
+          <div 
+            class="rounded-2xl px-4 py-2 max-w-[75%] text-sm"
+            :class="msg.role === 'user' ? 'bg-blue-600 text-white' : theme === 'light' ? 'bg-white text-gray-900 border border-gray-200' : 'bg-white/10 text-white'"
+            x-html="marked.parse(msg.text)"
+          ></div>
+
+          <!-- User Avatar -->
+          <div x-show="msg.role === 'user'" class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0" x-text="user.initials">
+          </div>
+        </div>
+      </template>
+
+      <!-- Typing -->
+      <div x-show="isTyping" x-cloak class="flex gap-2">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs">
+          AI
+        </div>
+        <div class="bg-white/10 rounded-2xl px-4 py-2">
+          <div class="flex gap-1">
+            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUT -->
+    <div class="border-t p-3 flex gap-2 bg-white">
+      <input 
+        x-model="inputMessage"
+        @keydown.enter="sendMessage()"
+        class="flex-1 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Scrivi un messaggio..."
+      />
+      <button 
+        @click="sendMessage()"
+        :disabled="!inputMessage.trim()"
+        class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-4 rounded-xl transition-colors"
+      >
+        ➤
+      </button>
+    </div>
+
   </div>
 
-  <div id="chat-area"></div>
+  <!-- PDF MODAL -->
+  <div x-show="pdfModalOpen" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+    <div @click.away="pdfModalOpen = false" class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
+      <div class="p-4 border-b flex items-center justify-between">
+        <h3 class="text-lg font-bold">📄 Carica PDF</h3>
+        <button @click="pdfModalOpen = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+      </div>
 
-  <div id="typing">🤖 L'assistente sta scrivendo...</div>
+      <div class="p-4">
+        <div 
+          @click="$refs.pdfInput.click()"
+          @dragover.prevent
+          @drop.prevent="handlePdfDrop($event)"
+          :class="selectedPdf ? 'border-green-400 bg-green-50' : 'border-gray-300'"
+          class="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer"
+        >
+          <input type="file" x-ref="pdfInput" @change="handlePdfSelect($event)" accept=".pdf" class="hidden"/>
+          
+          <div x-show="!selectedPdf">
+            <div class="text-4xl mb-2">📁</div>
+            <div class="text-sm text-gray-600">Clicca o trascina un PDF</div>
+            <div class="text-xs text-gray-400 mt-1">Max 10MB</div>
+          </div>
 
-  <div id="input-box">
-    <input id="prompt" placeholder="Scrivi un messaggio..." autocomplete="off"/>
-    <button id="send">Invia</button>
+          <div x-show="selectedPdf" x-cloak class="flex items-center justify-center gap-2">
+            <div class="text-2xl">✅</div>
+            <div class="text-sm font-medium" x-text="selectedPdf?.name"></div>
+          </div>
+        </div>
+
+        <button 
+          @click="uploadPdf()"
+          :disabled="!selectedPdf || pdfUploading"
+          class="w-full mt-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg font-medium text-sm"
+        >
+          <span x-show="!pdfUploading">Genera Riassunto</span>
+          <span x-show="pdfUploading" x-cloak>Elaborazione...</span>
+        </button>
+
+        <div x-show="pdfSummary" x-cloak class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div class="font-semibold text-sm mb-1">📝 Riassunto:</div>
+          <div class="text-xs text-gray-700" x-text="pdfSummary"></div>
+          <button @click="addPdfToChat()" class="w-full mt-2 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
+            Aggiungi alla Chat
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- EMAIL MODAL -->
+  <div x-show="emailModalOpen" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+    <div @click.away="emailModalOpen = false" class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+      <div class="p-4 border-b flex items-center justify-between">
+        <h3 class="text-lg font-bold">📧 Leggi Email</h3>
+        <button @click="closeEmailModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+      </div>
+
+      <div class="p-4">
+        <!-- Login -->
+        <div x-show="emailStep === 'login'" class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Provider</label>
+            <select x-model="emailProvider" class="w-full px-3 py-2 border rounded-lg text-sm">
+              <option value="gmail">Gmail</option>
+              <option value="outlook">Outlook</option>
+              <option value="yahoo">Yahoo</option>
+              <option value="icloud">iCloud</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Email</label>
+            <input x-model="emailAddress" type="email" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="tuo@email.com"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Password</label>
+            <input x-model="emailPassword" type="password" class="w-full px-3 py-2 border rounded-lg text-sm"/>
+            <div class="text-xs text-gray-500 mt-1">
+              ⚠️ Gmail: usa <a href="https://myaccount.google.com/apppasswords" target="_blank" class="text-blue-600">App Password</a>
+            </div>
+          </div>
+          <button @click="connectEmail()" :disabled="emailConnecting" class="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg text-sm font-medium">
+            <span x-show="!emailConnecting">Connetti</span>
+            <span x-show="emailConnecting" x-cloak>Connessione...</span>
+          </button>
+        </div>
+
+        <!-- Email List -->
+        <div x-show="emailStep === 'list'" x-cloak>
+          <div class="mb-3 p-2 bg-green-50 rounded-lg flex justify-between items-center">
+            <span class="text-xs font-medium" x-text="emailAddress"></span>
+            <button @click="disconnectEmail()" class="text-xs text-gray-600">Disconnetti</button>
+          </div>
+
+          <div class="space-y-2 max-h-80 overflow-y-auto">
+            <template x-for="email in emailList" :key="email.id">
+              <div @click="readEmail(email.id)" class="p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <div class="font-medium text-xs text-gray-900" x-text="email.subject"></div>
+                <div class="text-xs text-gray-500 mt-1" x-text="email.from"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Email Detail -->
+        <div x-show="emailStep === 'detail'" x-cloak>
+          <button @click="emailStep = 'list'" class="mb-3 text-blue-600 text-sm">← Indietro</button>
+
+          <div x-show="currentEmail" class="space-y-3">
+            <div class="p-3 bg-gray-50 rounded-lg">
+              <div class="font-bold text-sm mb-2" x-text="currentEmail?.subject"></div>
+              <div class="text-xs text-gray-600">
+                <div><strong>Da:</strong> <span x-text="currentEmail?.from"></span></div>
+                <div><strong>Data:</strong> <span x-text="currentEmail?.date"></span></div>
+              </div>
+            </div>
+
+            <div class="p-3 bg-white border rounded-lg max-h-40 overflow-y-auto">
+              <pre class="whitespace-pre-wrap text-xs" x-text="currentEmail?.body"></pre>
+            </div>
+
+            <button @click="addEmailToChat()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
+              Aggiungi alla Chat
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 
 <script>
-/* ------------------------------
-   STATE & LOAD CONVERSATIONS
------------------------------- */
-let currentConv = null;
-let partial = "";
+function chatWidget() {
+  return {
+    open: false,
+    view: 'chat', // 'conversations' or 'chat'
+    theme: 'dark',
+    showThemeMenu: false,
 
-/* API helpers */
-async function loadConvs(){
-  const r = await fetch("/conversations");
-  const list = await r.json();
-  const box = document.getElementById("convs");
-  box.innerHTML = "";
+    user: {
+      name: 'Utente',
+      email: 'utente@example.com',
+      initials: 'U'
+    },
 
-  list.forEach(c=>{
-    let el = document.createElement("div");
-    el.className="conv-item";
-    el.dataset.id = c.id;
-    el.innerHTML = `
-      <div class="avatar">C</div>
-      <div class="conv-title">${c.title}</div>
-    `;
-    el.onclick = ()=> loadConversation(c.id);
-    box.appendChild(el);
-  });
-}
+    conversations: [],
+    currentConv: null,
+    messages: [],
+    inputMessage: '',
+    isTyping: false,
 
-async function newConv(){
-  const r = await fetch("/conversation",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:"Nuova chat"})});
-  const j = await r.json();
-  await loadConvs();
-  loadConversation(j.id);
-}
+    pdfModalOpen: false,
+    selectedPdf: null,
+    pdfUploading: false,
+    pdfSummary: '',
 
-async function loadConversation(id){
-  const r = await fetch("/conversation/"+id);
-  const conv = await r.json();
-  currentConv = id;
-  document.getElementById("chat-title").innerText = conv.title;
-  const area = document.getElementById("chat-area");
-  area.innerHTML = "";
-  for(const m of conv.messages){
-    addMessage(m.role, m.text);
-  }
-  area.scrollTop = area.scrollHeight;
-}
+    emailModalOpen: false,
+    emailStep: 'login',
+    emailProvider: 'gmail',
+    emailAddress: '',
+    emailPassword: '',
+    emailConnecting: false,
+    emailList: [],
+    currentEmail: null,
 
-/* ------------------------------
-   MESSAGE RENDERING
------------------------------- */
-function addMessage(role,text){
-  const area = document.getElementById("chat-area");
+    async init() {
+      await this.loadConversations();
+    },
 
-  const row = document.createElement("div");
-  row.className="row";
-
-  const avatar = document.createElement("div");
-  avatar.className="avatar " + (role==="user"?"user":"bot");
-  avatar.textContent = role==="user"?"TU":"AI";
-
-  const bubble = document.createElement("div");
-  bubble.className="bubble " + (role==="user"?"user":"bot");
-  bubble.innerHTML = marked.parse(text);
-
-  if(role==="user"){
-    row.appendChild(bubble);
-    row.appendChild(avatar);
-  } else {
-    row.appendChild(avatar);
-    row.appendChild(bubble);
-  }
-
-  area.appendChild(row);
-  area.scrollTop = area.scrollHeight;
-  area.querySelectorAll("pre code").forEach(b => hljs.highlightElement(b));
-  return bubble;
-}
-
-/* ------------------------------
-   STREAMING (SSE)
------------------------------- */
-async function startStreamMessage(conv_id, message){
-  // save user message
-  await fetch("/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conv_id,message})});
-  addMessage("user", message);
-
-  document.getElementById("typing").style.display="block";
-
-  const r = await fetch("/start_stream",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conv_id})});
-  const meta = await r.json();
-  const streamId = meta.conv_id;
-
-  let botBubble = addMessage("assistant", "");
-  partial = "";
-
-  const es = new EventSource("/events/" + streamId);
-  es.onmessage = ev => {
-    try {
-      const d = JSON.parse(ev.data);
-      if(d.type==="token"){
-        partial += d.text;
-        botBubble.innerHTML = marked.parse(partial);
-        hljs.highlightAll();
+    async loadConversations() {
+      try {
+        const res = await fetch('/conversations');
+        this.conversations = await res.json();
+      } catch (err) {
+        console.error(err);
       }
-      if(d.type==="done"){
-        document.getElementById("typing").style.display="none";
-        es.close();
-        setTimeout(()=>loadConversation(streamId),300);
-      }
-      if(d.type==="error"){
-        botBubble.innerHTML = "<i>Errore generazione</i>";
-        document.getElementById("typing").style.display="none";
-        es.close();
-      }
-    } catch(e){ console.error(e); }
-  };
+    },
 
-  es.onerror = () => {
-    es.close();
-    document.getElementById("typing").style.display="none";
-  };
-}
+    openConversations() {
+      this.view = 'conversations';
+    },
 
-/* ------------------------------
-   UI EVENTS
------------------------------- */
-document.getElementById("send").onclick = async ()=>{
-  const input = document.getElementById("prompt");
-  const text = input.value.trim();
-  if(!text) return;
-  if(!currentConv){
-    const r = await fetch("/conversation",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:"Chat"})});
-    const j = await r.json();
-    currentConv = j.id;
-    await loadConvs();
+    async newConversation() {
+      try {
+        const res = await fetch('/conversation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: 'Nuova chat' })
+        });
+        const data = await res.json();
+        await this.loadConversations();
+        await this.loadConversation(data.id);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    async loadConversation(id) {
+      try {
+        const res = await fetch(`/conversation/${id}`);
+        const conv = await res.json();
+        this.currentConv = id;
+        this.messages = conv.messages;
+        this.view = 'chat';
+        this.$nextTick(() => {
+          this.$refs.chatArea.scrollTop = this.$refs.chatArea.scrollHeight;
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
+    async sendMessage() {
+      if (!this.inputMessage.trim()) return;
+
+      if (!this.currentConv) {
+        await this.newConversation();
+        await new Promise(r => setTimeout(r, 300));
+      }
+
+      const message = this.inputMessage;
+      this.inputMessage = '';
+
+      this.messages.push({ role: 'user', text: message });
+      this.$nextTick(() => {
+        this.$refs.chatArea.scrollTop = this.$refs.chatArea.scrollHeight;
+      });
+
+      try {
+        await fetch('/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ conv_id: this.currentConv, message })
+        });
+
+        this.isTyping = true;
+        const streamRes = await fetch('/start_stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ conv_id: this.currentConv })
+        });
+
+        const streamData = await streamRes.json();
+        let botMessage = { role: 'assistant', text: '' };
+        this.messages.push(botMessage);
+
+        const eventSource = new EventSource(`/events/${streamData.conv_id}`);
+        
+        eventSource.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'token') {
+            botMessage.text += data.text;
+            this.$nextTick(() => {
+              this.$refs.chatArea.scrollTop = this.$refs.chatArea.scrollHeight;
+            });
+          } else if (data.type === 'done') {
+            this.isTyping = false;
+            eventSource.close();
+          } else if (data.type === 'error') {
+            this.isTyping = false;
+            botMessage.text = 'Errore';
+            eventSource.close();
+          }
+        };
+
+        eventSource.onerror = () => {
+          this.isTyping = false;
+          eventSource.close();
+        };
+
+      } catch (err) {
+        console.error(err);
+        this.isTyping = false;
+      }
+    },
+
+    openPdfModal() {
+      this.pdfModalOpen = true;
+      this.selectedPdf = null;
+      this.pdfSummary = '';
+    },
+
+    handlePdfSelect(event) {
+      const file = event.target.files[0];
+      if (file && file.type === 'application/pdf') {
+        this.selectedPdf = file;
+      }
+    },
+
+    handlePdfDrop(event) {
+      const file = event.dataTransfer.files[0];
+      if (file && file.type === 'application/pdf') {
+        this.selectedPdf = file;
+      }
+    },
+
+    async uploadPdf() {
+      if (!this.selectedPdf) return;
+
+      this.pdfUploading = true;
+      const formData = new FormData();
+      formData.append('file', this.selectedPdf);
+
+      try {
+        const res = await fetch('/api/pdf/summary', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        
+        console.log('PDF Response:', data); // Debug
+        
+        if (data.success && data.summary) {
+          this.pdfSummary = data.summary;
+        } else if (data.error) {
+          alert('Errore: ' + data.error);
+        } else {
+          alert('Nessun riassunto ricevuto');
+        }
+      } catch (err) {
+        console.error('Errore upload PDF:', err);
+        alert('Errore: ' + err.message);
+      } finally {
+        this.pdfUploading = false;
+      }
+    },
+
+    async addPdfToChat() {
+      if (!this.pdfSummary) {
+        alert('Nessun riassunto da aggiungere');
+        return;
+      }
+      
+      this.pdfModalOpen = false;
+      
+      // Se non c'è conversazione corrente, creane una
+      if (!this.currentConv) {
+        await this.newConversation();
+        await new Promise(r => setTimeout(r, 500));
+      }
+      
+      this.view = 'chat';
+      this.inputMessage = `📄 **Riassunto PDF (${this.selectedPdf?.name}):**\n\n${this.pdfSummary}`;
+      
+      // Aspetta un attimo che la vista sia cambiata
+      await this.$nextTick();
+      await this.sendMessage();
+    },
+
+    openEmailModal() {
+      this.emailModalOpen = true;
+      this.emailStep = 'login';
+    },
+
+    closeEmailModal() {
+      this.emailModalOpen = false;
+      this.emailAddress = '';
+      this.emailPassword = '';
+    },
+
+    async connectEmail() {
+      if (!this.emailAddress || !this.emailPassword) return;
+
+      this.emailConnecting = true;
+
+      try {
+        const res = await fetch('/api/email/list', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: this.emailAddress,
+            password: this.emailPassword,
+            provider: this.emailProvider,
+            limit: 20
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          this.emailList = data.emails;
+          this.emailStep = 'list';
+        } else {
+          alert('Errore: ' + data.error);
+        }
+      } catch (err) {
+        alert('Errore: ' + err.message);
+      } finally {
+        this.emailConnecting = false;
+      }
+    },
+
+    disconnectEmail() {
+      this.emailStep = 'login';
+      this.emailPassword = '';
+    },
+
+    async readEmail(emailId) {
+      try {
+        const res = await fetch('/api/email/read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: this.emailAddress,
+            password: this.emailPassword,
+            provider: this.emailProvider,
+            email_id: emailId
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          this.currentEmail = data.email;
+          this.emailStep = 'detail';
+        } else {
+          alert('Errore: ' + data.error);
+        }
+      } catch (err) {
+        alert('Errore: ' + err.message);
+      }
+    },
+
+    async addEmailToChat() {
+      this.emailModalOpen = false;
+      this.view = 'chat';
+      
+      const emailText = `📧 **Email**\n\n**Oggetto:** ${this.currentEmail.subject}\n**Da:** ${this.currentEmail.from}\n\n${this.currentEmail.body.substring(0, 1000)}`;
+
+      this.inputMessage = emailText;
+      await this.sendMessage();
+    }
   }
-  input.value="";
-  startStreamMessage(currentConv,text);
-};
-
-document.getElementById("prompt").addEventListener("keydown",e=>{
-  if(e.key==="Enter") document.getElementById("send").click();
-});
-
-document.getElementById("new-btn").onclick = newConv;
-
-/* THEMES */
-document.querySelectorAll(".theme-btn").forEach(b=>{
-  b.onclick = ()=>{
-    const t = b.dataset.theme;
-    const page = document.getElementById("page");
-    if(t==="light") page.className="theme-light";
-    else if(t==="blue") page.className="theme-blue";
-    else if(t==="neum") page.className="theme-neum";
-    else page.className="";
-  };
-});
-
-/* INIT */
-loadConvs();
+}
 </script>
-{% endraw %}
+
 </body>
 </html>

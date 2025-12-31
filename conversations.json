@@ -118,5 +118,24 @@
         "ts": 1765025806.6391163
       }
     ]
+  },
+  "cfbfcd0a-716d-4c89-ac44-741da21d3098": {
+    "title": "Nuova chat",
+    "messages": [
+      {
+        "role": "user",
+        "text": "ciao mi dai indicazioni su come fare una somma con codice Java??",
+        "ts": 1767193194.809579
+      },
+      {
+        "role": "assistant",
+        "text": "Per effettuare la somma di due numeri in Java, puoi utilizzare la seguente struttura di codice:\n\n```java\npublic class Sommatoria {\n    public static void main(String[] args) {\n        int num1 = 5;\n        int num2 = 10;\n        int risultato = num1 + num2;\n        System.out.println(\"Il risultato della somma è: \" + risultato);\n    }\n}\n```\n\nQuesta codice definisce un'istanza della classe `Sommatoria` e calcola la somma di due numeri (`num1` e `num2`) utilizzando il operatore `+`. Il risultato viene salvato in una variabile `risultato`, che infine viene stampato sullo schermo.\n\nYou can also create a method to perform the addition operation, for reusability:\n\n```java\npublic class Sommatoria {\n    public static void main(String[] args) {\n        int num1 = 5;\n        int num2 = 10;\n        int risultato = calcolaSomma(num1, num2);\n        System.out.println(\"Il risultato della somma è: \" + risultato);\n    }\n\n    public static int calcolaSomma(int a, int b) {\n        return a + b;\n    }\n}\n```\n\nIn questo caso, il metodo `calcolaSomma` riceve due parametri (`a` e `b`) e restituisce la somma di questi due. Il metodo viene chiamato nel metodo `main` per calcolare e stampare il risultato.",
+        "ts": 1767193254.4752831
+      }
+    ]
+  },
+  "2c28be20-6b2e-4963-9554-15f074be7871": {
+    "title": "Nuova chat",
+    "messages": []
   }
 }
