@@ -522,10 +522,44 @@ function chatWidget() {
         
         const data = await res.json();
         
-        console.log('PDF Response:', data); // Debug
+        console.log('PDF Response:', data);
         
         if (data.success && data.summary) {
           this.pdfSummary = data.summary;
+          
+          // Chiudi modal e aggiungi direttamente alla chat
+          this.pdfModalOpen = false;
+          
+          // Se non c'è conversazione corrente, creane una
+          if (!this.currentConv) {
+            await this.newConversation();
+            await new Promise(r => setTimeout(r, 500));
+          }
+          
+          this.view = 'chat';
+          
+          // Aggiungi il messaggio del bot direttamente
+          const botMessage = {
+            role: 'assistant',
+            text: `📄 **Riassunto di "${data.filename}"**\n\n${data.summary}\n\n---\n*Lunghezza originale: ${data.original_length} caratteri*`
+          };
+          
+          this.messages.push(botMessage);
+          
+          // Salva il messaggio anche sul backend
+          await fetch('/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              conv_id: this.currentConv, 
+              message: `[PDF Analysis] ${data.filename}` 
+            })
+          });
+          
+          // Scroll alla fine
+          await this.$nextTick();
+          this.$refs.chatArea.scrollTop = this.$refs.chatArea.scrollHeight;
+          
         } else if (data.error) {
           alert('Errore: ' + data.error);
         } else {
@@ -536,10 +570,14 @@ function chatWidget() {
         alert('Errore: ' + err.message);
       } finally {
         this.pdfUploading = false;
+        // Reset per il prossimo upload
+        this.selectedPdf = null;
+        this.pdfSummary = '';
       }
     },
 
     async addPdfToChat() {
+      // Questa funzione ora non serve più, ma la lasciamo per compatibilità
       if (!this.pdfSummary) {
         alert('Nessun riassunto da aggiungere');
         return;
@@ -547,7 +585,6 @@ function chatWidget() {
       
       this.pdfModalOpen = false;
       
-      // Se non c'è conversazione corrente, creane una
       if (!this.currentConv) {
         await this.newConversation();
         await new Promise(r => setTimeout(r, 500));
@@ -556,7 +593,6 @@ function chatWidget() {
       this.view = 'chat';
       this.inputMessage = `📄 **Riassunto PDF (${this.selectedPdf?.name}):**\n\n${this.pdfSummary}`;
       
-      // Aspetta un attimo che la vista sia cambiata
       await this.$nextTick();
       await this.sendMessage();
     },

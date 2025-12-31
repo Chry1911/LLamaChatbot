@@ -137,5 +137,30 @@
   "2c28be20-6b2e-4963-9554-15f074be7871": {
     "title": "Nuova chat",
     "messages": []
+  },
+  "e31c4058-8d36-46c8-9a6c-bb292d8559ff": {
+    "title": "Nuova chat",
+    "messages": [
+      {
+        "role": "user",
+        "text": "📄 **Riassunto PDF (FAQ_Bonus_Asilo_Nido.pdf):**\n\nIl Bonus Asilo Nido è un contributo spettante ai figli di età inferiore ai 36 mesi per il pagamento delle rette asili nido pubblici e privati, o forma di assistenza domiciliare, a favore dei bambini affetti da gravi patologie croniche. L'importo per l'anno solare 2023 è stato stanziato con un fondo di 564,8 milioni di euro. La domanda per il bonus può essere presentata fino al 31 dicembre 2ranno i primi due anni e mezzo del bambino, mentre in caso di Art.4 si possono richiedere le mensilità dell'anno solare in cui il minore compie 3 anni. Il servizio online per la domanda è accessibile tramite www.inps.it, utilizzando SPID, CIE o CNS come identificativo. Per presentare la domanda di bonus nido bisogna cliccare su \"Inserimento\" dalla schermata principale del servizio Bonus Asilo Nido. Art.3 si riferisce alla situazione in cui il contributo viene richiesto per un minore che frequenta un asilo nido.\n\nWord Count: 98",
+        "ts": 1767194879.0327237
+      },
+      {
+        "role": "assistant",
+        "text": "Risposta: Il Bonus Asilo Nido è un contributo destinato ai figli di età inferiore ai 36 mesi per aiutare a pagare le rette asili nido pubblici e privati o assistenza domiciliare per bambini affetti da gravi patologie croniche. L'importo per l'anno 2023 è stato fissato a 564,8 milioni di euro. Le domande possono essere presentate fino al 31 dicembre riguardo ai primi due anni e mezzo del bambino, mentre per gli anni successivi si possono richiedere le mensilità. Il servizio online per la domanda è disponibile sul sito www.inps.it, dove si può utilizzare SPID, CIE o CNS come identifica. Per richiedere il Bonus Asilo Nido bisogna cliccare su \"Inserimento\" dalla schermata principale del servizio.\n\nSupporto: \n1. Il Bonus Asilo Nido è un contributo per i bambini di età inferiore ai 36 mesi.\n2. L'importo per l'anno 2023 è di 564,8 milioni di euro.\n3. Le domande possono essere presentate fino al 31 dicembre per i primi due anni e mezzo del bambino.\n4. Il servizio online per la domanda è disponibile su www.inps.it.\n5. Per richiedere il Bonus Asilo Nido, clicca su \"Inserimento\" dalla schermata principale del servizio.\n\n\nTabella di contatto per il servizio Bonus Asilo Nido:\n\nInformazione | Valore\n------------ | -------------\nN",
+        "ts": 1767194958.3957038
+      }
+    ]
+  },
+  "7a870abf-690b-42b2-b695-5cff20481740": {
+    "title": "Nuova chat",
+    "messages": [
+      {
+        "role": "user",
+        "text": "[PDF Analysis] FAQ_Bonus_Asilo_Nido.pdf",
+        "ts": 1767195329.9885237
+      }
+    ]
   }
 }
